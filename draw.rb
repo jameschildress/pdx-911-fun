@@ -1,27 +1,39 @@
 require_relative 'require'
 
-Pixel = Struct.new(:color, :x, :y)
+Point = Struct.new(:x, :y, :color)
 
 Bounds = Struct.new(:min_x, :min_y, :max_x, :max_y) do
-  def width
+  def x
     max_x - min_x
   end
-  def height
+  def y
     max_y - min_y
   end
 end
 
-scale_x = 300
-scale_y = 100
+height = 500
+width  = 1000
+
+colors = %w(
+  #00F
+  #0F0
+  #F00
+  #FF0
+  #0FF
+  #F0F
+  #000
+  #000
+  #000
+  #000
+  #000
+)
 
 
 
 pixels = PDX911::Database.query("SELECT agency_id AS a , location[0] AS x, location[1] AS y FROM dispatches ORDER BY date DESC")
 
 pixels.map! do |pix|
-  Pixel.new pix['a'].to_i,
-    (pix['x'].to_f * scale_x).floor,
-    (pix['y'].to_f * scale_y).floor
+  Point.new pix['x'].to_f, pix['y'].to_f, colors[pix['a'].to_i]
 end
 
 
@@ -36,13 +48,19 @@ end
 
 
 
-canvas = Magick::Image.new(bounds.width, bounds.height)
+canvas = Magick::Image.new(width, height)
 gc = Magick::Draw.new
 
-gc.fill("rgba(0,0,0,255)")
+
+gc.fill '#000'
+
+gc.rectangle(0, 0, width, height) 
 
 pixels.map do |pix|
-  gc.point(pix.x - bounds.min_x, pix.y - bounds.min_y)
+  gc.fill pix.color
+  x = (pix.x - bounds.min_x) / bounds.x * width
+  y = (pix.y - bounds.min_y) / bounds.y * height
+  gc.point x, y
 end
 
 gc.draw canvas
