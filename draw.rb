@@ -34,7 +34,16 @@ bounds = pixels.reduce(Bounds.new(10000, 10000, -10000, -10000)) do |memo, pix|
   memo
 end
 
+
+
 canvas = Magick::Image.new(bounds.width, bounds.height)
+gc = Magick::Draw.new
 
+gc.fill("rgba(0,0,0,255)")
 
+pixels.map do |pix|
+  gc.point(pix.x - bounds.min_x, pix.y - bounds.min_y)
+end
 
+gc.draw canvas
+canvas.write 'foo.png'
