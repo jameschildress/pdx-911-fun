@@ -11,9 +11,10 @@ Bounds = Struct.new(:min_x, :min_y, :max_x, :max_y) do
   end
 end
 
-height = 1500
-width  = 2200
-radius = 3
+h = 3000
+w  = 4500
+r = 3
+d = r * 2
 
 colors = %w(
   6cf
@@ -51,15 +52,15 @@ end
 
 
 
-canvas = Magick::Image.new(width, height, Magick::GradientFill.new(0, 0, 0, 0, '#000', '#000'))
+canvas = Magick::Image.new(w + d, h + d, Magick::GradientFill.new(0, 0, 0, 0, '#000', '#000'))
+gradient = Magick::Image.new(d, d, Magick::GradientFill.new(r, r, r, r, '#fff', '#000'))
 gc = Magick::Draw.new
 
 pixels.each do |pix|
-  x = (pix.x - bounds.min_x) / bounds.x * width
-  y = (1 - (pix.y - bounds.min_y) / bounds.y) * height
-  # gradient_image = Magick::Image.new(width, height, Magick::GradientFill.new(x1, y1, x2, y2, start_color, end_color))
-  gc.fill "##{colors[pix.color]}8"
-  gc.point x, y
+  x = ((pix.x - bounds.min_x) / bounds.x * w) + r
+  y = ((1 - (pix.y - bounds.min_y) / bounds.y) * h) + r
+  gc.fill "##{colors[pix.color]}3"
+  gc.circle x, y, x + r, y
 end
 
 gc.draw canvas
