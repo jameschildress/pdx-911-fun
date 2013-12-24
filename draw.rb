@@ -11,25 +11,28 @@ Bounds = Struct.new(:min_x, :min_y, :max_x, :max_y) do
   end
 end
 
-h = 3000
-w  = 4500
-r = 3
-d = r * 2
+h = 3000  # width of image
+w  = 4500 # height of image
+r = 5     # radius of radial gradient
+d = r * 2 # diameter of radial gradient
+p = 0.5   # colorize percent
+
+gradient = Magick::Image.read('gradient.png')[0]
 
 colors = %w(
-  6cf
-  6ff
-  f9f
-  f99
-  cf9
-  9cf
-  f9c
-  c9f
-  ff9
-  fc9
-  fff
-  9fc
-  9f9
+  #6cf
+  #6ff
+  #f9f
+  #f99
+  #cf9
+  #9cf
+  #f9c
+  #c9f
+  #ff9
+  #fc9
+  #fff
+  #9fc
+  #9f9
 )
 
 
@@ -37,7 +40,7 @@ colors = %w(
 pixels = PDX911::Database.query("SELECT agency_id AS a , location[0] AS y, location[1] AS x FROM dispatches ORDER BY date DESC")
 
 pixels.map! do |pix|
-  Point.new pix['x'].to_f, pix['y'].to_f, pix['a'].to_i - 1
+  Point.new pix['x'].to_f, pix['y'].to_f, colors[pix['a'].to_i - 1]
 end
 
 
@@ -52,16 +55,13 @@ end
 
 
 
-canvas = Magick::Image.new(w + d, h + d, Magick::GradientFill.new(0, 0, 0, 0, '#000', '#000'))
-gradient = Magick::Image.new(d, d, Magick::GradientFill.new(r, r, r, r, '#fff', '#000'))
+canvas = Magick::Image.new(w+d, h+d, Magick::GradientFill.new(0, 0, 0, 0, '#000', '#000'))
 gc = Magick::Draw.new
 
 pixels.each do |pix|
   x = ((pix.x - bounds.min_x) / bounds.x * w) + r
   y = ((1 - (pix.y - bounds.min_y) / bounds.y) * h) + r
-  gc.fill "##{colors[pix.color]}3"
-  gc.circle x, y, x + r, y
+  canvas.composite! gradient.colorize(p,p,p,0,pix.color), x+r, y+r, Magick::PlusCompositeOp
 end
 
-gc.draw canvas
 canvas.write 'foo.png'
