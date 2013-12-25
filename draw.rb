@@ -21,7 +21,7 @@ gradient = Magick::Image.read('gradient.png')[0]
 # Image filename
 output_file = 'dispatches.png'
 
-h = 3800 # width of image
+h = 3500 # width of image
 w = 5000 # height of image
 d = gradient.base_rows # diameter of radial gradient
 r = d / 2 # radius of radial gradient
@@ -57,14 +57,17 @@ end
 
 
 
-# Calculate the bounds of the latitude and longitude
-bounds = points.reduce(Bounds.new(10000, 10000, -10000, -10000)) do |memo, pix|
-  memo.min_x = pix.x if pix.x < memo.min_x
-  memo.max_x = pix.x if pix.x > memo.max_x
-  memo.min_y = pix.y if pix.y < memo.min_y
-  memo.max_y = pix.y if pix.y > memo.max_y
-  memo
-end
+# Set the bounds of the image to include all dispatches.
+# bounds = points.reduce(Bounds.new(1000, 1000, -1000, -1000)) do |memo, pix|
+#   memo.min_x = pix.x if pix.x < memo.min_x
+#   memo.max_x = pix.x if pix.x > memo.max_x
+#   memo.min_y = pix.y if pix.y < memo.min_y
+#   memo.max_y = pix.y if pix.y > memo.max_y
+#   memo
+# end
+
+# Set the bounds to an arbitrary frame.
+bounds = Bounds.new(-122.800, 45.635, -122.320, 45.414)
 
 
 
@@ -74,7 +77,7 @@ canvas = Magick::Image.new(w+d, h+d, Magick::GradientFill.new(0, 0, 0, 0, bg_col
 # Paint each dispatch by compositing a colorized version of the 'brush' image onto the canvas
 points.each do |pix|
   x = ((pix.x - bounds.min_x) / bounds.x * w) + r
-  y = ((1 - (pix.y - bounds.min_y) / bounds.y) * h) + r
+  y = ((pix.y - bounds.min_y) / bounds.y * h) + r
   canvas.composite! gradient.colorize(c,c,c,0,pix.color), x+r, y+r, Magick::PlusCompositeOp
 end
 
