@@ -31,7 +31,7 @@ colors = Hash.new('#AAAAAA').merge({
 bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
 
 # Create a blank, black canvas
-canvas = Magick::Image.new(w+d, h+d, Magick::GradientFill.new(0, 0, 0, 0, bg_color, bg_color))
+canvas = Magick::Image.new(w, h, Magick::GradientFill.new(0, 0, 0, 0, bg_color, bg_color))
 
 # Paint each dispatch by compositing a colorized version of the 'brush' image onto the canvas
 PDX911::Dispatches.each do |dispatch|
