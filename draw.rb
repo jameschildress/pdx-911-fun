@@ -16,19 +16,16 @@ bg_color = '#000'
 
 # Different color for each dispatch's agency_id.
 colors = Hash.new('#AAAAAA').merge({
-  0  => '#FF0009',
-  1  => '#FF7700',
-  2  => '#FFF700',
-  3  => '#89FF00',
-  4  => '#09FF00',
-  5  => '#00FF77',
-  6  => '#00FFF7',
-  7  => '#0089FF',
-  8  => '#0009FF',
-  9  => '#7700FF',
-  10 => '#F700FF',
-  11 => '#FF0089' 
-})
+  1 => '#f70',  # Portland Police
+  0 => '#f51',  # Gresham Police
+  2 => '#f04',  # Fairview Police
+  5 => '#fc3',  # Troutdale Police
+  7 => '#fc3',  # Airport Police
+  6 => '#0ff',  # Portland Fire
+  3 => '#0f7',  # Gresham Fire
+  8 => '#37f',  # Airport Fire
+  4 => '#f0f',  # Multnomah County Sheriff
+})         
 
 # Set the bounds to an arbitrary frame.
 bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
