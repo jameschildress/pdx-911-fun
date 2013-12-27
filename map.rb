@@ -1,21 +1,24 @@
 require_relative 'pdx911/pdx911'
 
 # Load the 'brush' used to mark each dispatch
-gradient = Magick::Image.read('gradient.png')[0]
+brush            = Magick::Image.read('gradient.png')[0]
+brush_diameter   = brush.base_rows # diameter of radial gradient
+brush_radius     = brush_diameter / 2 # radius of radial gradient
+colorize_percent = 0.5 # colorize percent
 
-# Image filename
-output_file = 'dispatches.png'
+# Ready the blank image canvas
+image_name       = 'dispatches.png'
+image_height     = 3500 # width of image
+image_width      = 5000 # height of image
+image_bg_color   = '#000'
+canvas           = Magick::Image.new(image_width, image_height, Magick::GradientFill.new(0, 0, 0, 0, image_bg_color, image_bg_color))
 
-h = 3500 # width of image
-w = 5000 # height of image
-d = gradient.base_rows # diameter of radial gradient
-r = d / 2 # radius of radial gradient
-c = 0.5 # colorize percent
+# Properties of the bar chart at the bottom of the image
+bar_padding      = 20
+bar_height       = 1
 
-bg_color = '#000'
-
-# Different color for each dispatch's agency_id.
-colors = Hash.new('#AAAAAA').merge({
+# Different color for each dispatch's agency_id
+colors = Hash.new('#AAA').merge({
   1 => '#f70',  # Portland Police
   0 => '#f51',  # Gresham Police
   2 => '#f04',  # Fairview Police
@@ -27,19 +30,49 @@ colors = Hash.new('#AAAAAA').merge({
   4 => '#f0f',  # Multnomah County Sheriff
 })         
 
-# Set the bounds to an arbitrary frame.
-bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
 
-# Create a blank, black canvas
-canvas = Magick::Image.new(w, h, Magick::GradientFill.new(0, 0, 0, 0, bg_color, bg_color))
+
+# MAP OF DISPATCHES ===================================================
+
+# Set the bounds to an arbitrary frame
+bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
 
 # Paint each dispatch by compositing a colorized version of the 'brush' image onto the canvas
 PDX911::Dispatches.each do |dispatch|
-  x = ((dispatch.x - bounds.min_x) / bounds.width * w) + r
-  y = ((dispatch.y - bounds.min_y) / bounds.height * h) + r
+  x = ((dispatch.x - bounds.min_x) / bounds.width * image_width) + brush_radius
+  y = ((dispatch.y - bounds.min_y) / bounds.height * image_height) + brush_radius
   color = colors[dispatch.agency_id - 1]
-  canvas.composite! gradient.colorize(c,c,c,0,color), x+r, y+r, Magick::PlusCompositeOp
+  this_brush = brush.colorize(colorize_percent, colorize_percent, colorize_percent, 0, color)
+  canvas.composite! this_brush, x + brush_radius, y + brush_radius, Magick::PlusCompositeOp
 end
 
+
+
+# AGENCY CHART ========================================================
+
+# Get the total number of dispatches
+total_dispatches = PDX911::Agencies.reduce(0) do |memo, agency|
+  memo += agency.dispatch_count
+end
+
+# Paint the bar chart at the bottom of the image
+x          = bar_padding
+max_x      = image_width - ((PDX911::Agencies.count + 1) * bar_padding)
+bar_bottom = image_height - bar_padding
+bar_top    = bar_bottom - bar_height
+
+gc = Magick::Draw.new
+
+PDX911::Agencies.each do |agency|
+  width = (agency.dispatch_count.to_f / total_dispatches.to_f) * max_x
+  color = colors[agency.id - 1]
+  gc.fill "#{color}6"
+  gc.rectangle x, bar_top, x + width, bar_bottom
+  x = x + width + bar_padding
+end
+
+
+
 # Save the file
-canvas.write output_file
+gc.draw canvas
+canvas.write image_name
