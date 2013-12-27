@@ -1,19 +1,4 @@
-require_relative 'require'
-
-
-
-Point = Struct.new(:x, :y, :color)
-
-Bounds = Struct.new(:min_x, :min_y, :max_x, :max_y) do
-  def x
-    max_x - min_x
-  end
-  def y
-    max_y - min_y
-  end
-end
-
-
+require_relative 'pdx911/pdx911'
 
 # Load the 'brush' used to mark each dispatch
 gradient = Magick::Image.read('gradient.png')[0]
@@ -30,55 +15,33 @@ c = 0.5 # colorize percent
 bg_color = '#000'
 
 # Different color for each dispatch's agency_id.
-colors = %w(
-  #6cf
-  #6ff
-  #f9f
-  #f99
-  #cf9
-  #9cf
-  #f9c
-  #c9f
-  #ff9
-  #fc9
-  #fff
-  #9fc
-  #9f9
-)
-
-
-
-# Fetch points from the dispatches database
-points = PDX911::Database.query(
-  "SELECT agency_id AS a , location[0] AS y, location[1] AS x FROM dispatches ORDER BY date DESC"
-).map do |pix|
-  Point.new pix['x'].to_f, pix['y'].to_f, colors[pix['a'].to_i - 1]
-end
-
-
-
-# Set the bounds of the image to include all dispatches.
-# bounds = points.reduce(Bounds.new(1000, 1000, -1000, -1000)) do |memo, pix|
-#   memo.min_x = pix.x if pix.x < memo.min_x
-#   memo.max_x = pix.x if pix.x > memo.max_x
-#   memo.min_y = pix.y if pix.y < memo.min_y
-#   memo.max_y = pix.y if pix.y > memo.max_y
-#   memo
-# end
+colors = Hash.new('#AAAAAA').merge({
+  0  => '#FF0009',
+  1  => '#FF7700',
+  2  => '#FFF700',
+  3  => '#89FF00',
+  4  => '#09FF00',
+  5  => '#00FF77',
+  6  => '#00FFF7',
+  7  => '#0089FF',
+  8  => '#0009FF',
+  9  => '#7700FF',
+  10 => '#F700FF',
+  11 => '#FF0089' 
+})
 
 # Set the bounds to an arbitrary frame.
-bounds = Bounds.new(-122.800, 45.635, -122.320, 45.414)
-
-
+bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
 
 # Create a blank, black canvas
 canvas = Magick::Image.new(w+d, h+d, Magick::GradientFill.new(0, 0, 0, 0, bg_color, bg_color))
 
 # Paint each dispatch by compositing a colorized version of the 'brush' image onto the canvas
-points.each do |pix|
-  x = ((pix.x - bounds.min_x) / bounds.x * w) + r
-  y = ((pix.y - bounds.min_y) / bounds.y * h) + r
-  canvas.composite! gradient.colorize(c,c,c,0,pix.color), x+r, y+r, Magick::PlusCompositeOp
+PDX911::Dispatches.each do |dispatch|
+  x = ((dispatch.x - bounds.min_x) / bounds.width * w) + r
+  y = ((dispatch.y - bounds.min_y) / bounds.height * h) + r
+  color = colors[dispatch.agency_id - 1]
+  canvas.composite! gradient.colorize(c,c,c,0,color), x+r, y+r, Magick::PlusCompositeOp
 end
 
 # Save the file
