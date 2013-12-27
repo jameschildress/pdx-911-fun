@@ -4,16 +4,12 @@ require_relative 'pdx911/pdx911'
 
 # Ready the blank image canvas
 image_name       = 'dispatches.png'
-image_height     = 2000 # width of image
-image_width      = 3000 # height of image
+image_height     = 3000 # width of image
+image_width      = 4000 # height of image
 image_bg_color   = '#000'
 canvas           = Magick::Image.new(image_width, image_height, Magick::GradientFill.new(0, 0, 0, 0, image_bg_color, image_bg_color))
 
-# Properties of the bar chart at the bottom of the image
-bar_padding      = 20
-bar_height       = 1
-
-# Different color for each dispatch's agency_id
+# Different color for each agency, with a default color for miscellaneous agencies
 colors = Hash.new('#AAA').merge({
   1 => '#f70',  # Portland Police
   0 => '#f51',  # Gresham Police
@@ -50,18 +46,20 @@ end
 
 
 
-# AGENCY CHART ========================================================
+# AGENCY BAR CHART ====================================================
+
+# Properties of the bar chart at the bottom of the image
+bar_padding = 10
+bar_height  = 1
+x           = bar_padding
+max_x       = image_width - ((PDX911::Agencies.count + 1) * bar_padding)
+bar_bottom  = image_height - bar_padding
+bar_top     = bar_bottom - bar_height
 
 # Get the total number of dispatches
 total_dispatches = PDX911::Agencies.reduce(0) do |memo, agency|
   memo += agency.dispatch_count
 end
-
-# Paint the bar chart at the bottom of the image
-x          = bar_padding
-max_x      = image_width - ((PDX911::Agencies.count + 1) * bar_padding)
-bar_bottom = image_height - bar_padding
-bar_top    = bar_bottom - bar_height
 
 gc = Magick::Draw.new
 
