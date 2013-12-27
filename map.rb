@@ -1,15 +1,11 @@
 require_relative 'pdx911/pdx911'
 
-# Load the 'brush' used to mark each dispatch
-brush            = Magick::Image.read('gradient.png')[0]
-brush_diameter   = brush.base_rows # diameter of radial gradient
-brush_radius     = brush_diameter / 2 # radius of radial gradient
-colorize_percent = 0.5 # colorize percent
+
 
 # Ready the blank image canvas
 image_name       = 'dispatches.png'
-image_height     = 3500 # width of image
-image_width      = 5000 # height of image
+image_height     = 2000 # width of image
+image_width      = 3000 # height of image
 image_bg_color   = '#000'
 canvas           = Magick::Image.new(image_width, image_height, Magick::GradientFill.new(0, 0, 0, 0, image_bg_color, image_bg_color))
 
@@ -33,6 +29,12 @@ colors = Hash.new('#AAA').merge({
 
 
 # MAP OF DISPATCHES ===================================================
+
+# Load the 'brush' used to mark each dispatch
+brush            = Magick::Image.read('gradient.png')[0]
+brush_diameter   = brush.base_rows # diameter of radial gradient
+brush_radius     = brush_diameter / 2 # radius of radial gradient
+colorize_percent = 0.5 # colorize percent
 
 # Set the bounds to an arbitrary frame
 bounds = PDX911::Bounds.new(-122.800, 45.635, -122.320, 45.414)
